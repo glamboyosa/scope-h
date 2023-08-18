@@ -1,5 +1,6 @@
 # Scope H/
 
+```
 .
 ├── Dockerfile
 ├── Makefile
@@ -16,6 +17,7 @@
 ├── main.py
 ├── user_posts.csv
 └── users.csv
+```
 
 src contains the main challenge (creating a report), it uses Docker.
 
