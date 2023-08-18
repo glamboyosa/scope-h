@@ -7,7 +7,8 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src /app/src
+COPY src /app/src/
+COPY src/*.csv /app/
 
 EXPOSE 8000
 
