@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src /app/src
 COPY src/*.csv /app/
 
-# Install linting tools and code completion libraries
+# Install  libraries
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Start the application

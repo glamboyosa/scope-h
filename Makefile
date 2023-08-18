@@ -24,3 +24,9 @@ clean:
 # Clean everything, including Docker images and containers
 clean-all: clean
 	docker system prune -af
+
+up:
+	cd opt && docker-compose up
+
+down:
+	cd opt && docker-compose down
