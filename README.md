@@ -49,7 +49,7 @@ make run
 It will create an `influencer.pdf` file in the src directory. 
 
 ## Optional Challenge (run)
-To run the main challenge, open the terminal via Ctrl +` and type the following: 
+To run the optional challenge, open the terminal via Ctrl +` and type the following: 
 
 ```bash 
 make up
