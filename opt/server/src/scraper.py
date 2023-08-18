@@ -1,6 +1,12 @@
 import os 
-import pandas as pd
 from typing import List, Dict
+from datetime import datetime
+from itertools import dropwhile, takewhile
+
+import pandas as pd
+import instaloader
+
+L = instaloader.Instaloader()
 
 InfluencerDictType = Dict[str, int]
 InfluencerListType = List[InfluencerDictType]
@@ -10,50 +16,95 @@ class Scraper:
       
         self.df_posts = None
         self.df_users = None
-        self.df = None
+        self.columns=['ig_username', 'caption_text', 'taken_at']
+        self.df = pd.DataFrame(columns=self.columns)
+        self.df_list = []
+       
+        self.session_id = os.environ.get("session_id")
         self.current_directory = os.getcwd()
         print("Current working directory:", self.current_directory)
         try:
-            csv_users_posts_file = self.current_directory + '/src/user_posts.csv'
-            df_posts = pd.read_csv(csv_users_posts_file)
-
+      
             # load users 
             csv_users_file = self.current_directory + '/src/users.csv'
-            df_users = pd.read_csv(csv_users_file)
+            self.df_users = pd.read_csv(csv_users_file)
 
-            self.df  = pd.merge(df_posts, df_users, left_on='person_id', right_on='id', how='inner')
-
+            
         except FileNotFoundError:
             raise FileNotFoundError("CSV file not found :/")
-    def __calculate_engagement(_,total_likes: int, total_comments: int, total_num_followers: int):
-   
-        ratio = (total_likes + total_comments) / total_num_followers
-   
-        percent = ratio * 100
     
+    def __get_ig_users(self): 
+         influencers = self.df_users['ig_username'].tolist()
+         return influencers
     
-        return percent
+    def get_ig_users_info_for_brand(self):
+         SINCE = datetime(2023, 7, 1)
+         UNTIL = datetime(2023, 7, 31)
+         influencers: List[str] = self.__get_ig_users()
+        
+         
+         try: 
+              # loop through influencer and set the profile name
+              # loop through their posts and do profile.get_followers(), .get_followees() and save the name 
+                for influencer in influencers[:50]: 
+                     
+                    profile = instaloader.Profile.from_username(L.context,influencer)
+                    if not profile.is_private:
+                        user_posts =  profile.get_posts()  
+                    
+                        k = 0  # initiate k
 
-    # helper function to return the average score et al for general 
-    def __general_results(self, data: pd.DataFrame): 
-        df2 = data.assign(avg_gen=self.__calculate_engagement(data['like_count'].astype(int), data['comment_count'].astype(int), data['ig_num_followers'].astype(int)))
+                        for post in user_posts:
+                            postdate = post.date
+                        
+                        
+                            if postdate > UNTIL:
+                                continue
+                            elif postdate <= SINCE:
+                                k += 1
+                                if k == 50:
+                                    break
+                                else:
+                                    continue
+                            else:
+                                
+                                data = {
+                                    'ig_username': influencer,
+                                    'caption_text': post.caption,
+                                    'taken_at': postdate
+                                }
+                                print(postdate)
+                                
+                                self.df_list.append(data)
+                                #L.get_json()
+                                # if you want to tune k, uncomment below to get your k max
+                                #k_list.append(k)
+                                k = 0
+                self.df = pd.DataFrame(self.df_list, columns=self.columns)
+                print(self.df)
+       
+         except Exception as e: 
+              print(self.df_list)
+              print("----------------")
+              if len(self.df_list) > 0: 
+                   self.df = pd.DataFrame(self.df_list, columns=self.columns)
+                   print(self.df)
+              print("SOMETHING GOT FUCKED", e)
+         print(self.df_list)
+         return self.df
 
-        grouped_data_general = df2.assign(engagement_general=df2.groupby('person_id')['avg_gen'].transform('mean').apply(lambda x: '{:.2f}'.format(x)) + '%')
    
-        return grouped_data_general
-
     # helper function to return the average score et al for specific ppl who mention 
     def __specific_results(self, data: pd.DataFrame): 
     # Group the data by 'person_id' 
-        grouped_data_specific = data.groupby('person_id')
-        filtered_groups = []
-    
+        grouped_data_specific = data.groupby('ig_username')
+      
 # loop through grouped data 
    
         persons_posts_list = []
         persons_post_hashtag_list = []
         person_posts_mention_list = []
-        for person_id, group in grouped_data_specific:
+        for ig_username, group in grouped_data_specific:
         
             posts_count = 0
             post_hashtag_count = 0
@@ -64,38 +115,37 @@ class Scraper:
                         posts_count += 1
                         post_hashtag_count = str(row['caption_text']).count('#bubbleroom') + str(row['caption_text']).count('#bubbleroomstyle')
                     
-                        dict_posts_for_person_id = {person_id: posts_count}
-                        dict_post_hashtags_for_person_id = {person_id: post_hashtag_count}
+                        dict_posts_for_person_id = {ig_username: posts_count}
+                        dict_post_hashtags_for_person_id = {ig_username: post_hashtag_count}
                         # count the total number of posts made by an influencer 
-                        if any(person_id in d for d in persons_posts_list):
-                            persons_posts_list = [{key: posts_count if key == person_id else value for key, value in d.items()} for d in persons_posts_list]
+                        if any(ig_username in d for d in persons_posts_list):
+                            persons_posts_list = [{key: posts_count if key == ig_username else value for key, value in d.items()} for d in persons_posts_list]
                         else: 
                             persons_posts_list.append(dict_posts_for_person_id)
                         # count the total number of hashtags for an influencer
-                        if any(person_id in d for d in persons_post_hashtag_list):
-                            persons_post_hashtag_list = [{key: d[person_id] + post_hashtag_count if key == person_id else value for key, value in d.items()} for d in persons_post_hashtag_list]
+                        if any(ig_username in d for d in persons_post_hashtag_list):
+                            persons_post_hashtag_list = [{key: d[ig_username] + post_hashtag_count if key == ig_username else value for key, value in d.items()} for d in persons_post_hashtag_list]
                         else: 
                             persons_post_hashtag_list.append(dict_post_hashtags_for_person_id)
                     
-                        filtered_groups.append(row)
                 elif  "@bubbleroom" in str(row['caption_text']): 
                     posts_count += 1
                     post_mention_count = str(row['caption_text']).count('@bubbleroom')
                 
-                    dict_posts_for_person_id = {person_id: posts_count}
-                    dict_posts_mentions_for_person_id = {person_id: post_mention_count}
+                    dict_posts_for_person_id = {ig_username: posts_count}
+                    dict_posts_mentions_for_person_id = {ig_username: post_mention_count}
                     # count the total number of posts made by an influencer 
-                    if any(person_id in d for d in persons_posts_list):
-                            persons_posts_list = [{key: posts_count if key == person_id else value for key, value in d.items()} for d in persons_posts_list]
+                    if any(ig_username in d for d in persons_posts_list):
+                            persons_posts_list = [{key: posts_count if key == ig_username else value for key, value in d.items()} for d in persons_posts_list]
                     else: 
                             persons_posts_list.append(dict_posts_for_person_id)
                     #count the total number of mentions by an influencer 
-                    if any(person_id in d for d in person_posts_mention_list):
-                            person_posts_mention_list = [{key:  d[person_id] + post_mention_count if key == person_id else value for key, value in d.items()} for d in person_posts_mention_list]
+                    if any(ig_username in d for d in person_posts_mention_list):
+                            person_posts_mention_list = [{key:  d[ig_username] + post_mention_count if key == ig_username else value for key, value in d.items()} for d in person_posts_mention_list]
                     else: 
                             person_posts_mention_list.append(dict_posts_mentions_for_person_id)
 
-                    filtered_groups.append(row)
+                   
 
             posts_count = 0
             post_mention_count = 0
@@ -112,46 +162,17 @@ class Scraper:
         print(persons_post_hashtag_list)
         print("--------------------")  
 
-        res = pd.DataFrame()   
-        for series in filtered_groups:
-            res = res._append(series, ignore_index=True)
+     
         
         
-        df2 = res.assign(avg_gen=self.__calculate_engagement(res['like_count'].astype(int), res['comment_count'].astype(int), res['ig_num_followers'].astype(int)))
-
-        df3 = df2.assign(engagement_specific=df2.groupby('person_id')['avg_gen'].transform('mean').apply(lambda x: '{:.2f}'.format(x)) + '%')
+        return ( persons_posts_list, persons_post_hashtag_list, person_posts_mention_list)
     
-        return (df3, persons_posts_list, persons_post_hashtag_list, person_posts_mention_list)
-    
-    def filter_by_date(self) -> pd.DataFrame: 
-    
-    # Convert the 'date' column to datetime type
-        self.df["taken_at"] = pd.to_datetime(self.df["taken_at"])
-    
-    # extract the month you are targeting into a variable
-        target_month = 1     
-        target_year = 2021
-    # Filter the DataFrame for a particular month
-        filtered_df = self.df[(self.df['taken_at'].dt.month == target_month) & (self.df['taken_at'].dt.year == target_year)]
-
-        return filtered_df
-    
-    def group_by_person_id(self,data: pd.DataFrame) -> tuple[pd.DataFrame, InfluencerListType, InfluencerListType, InfluencerListType]: 
+ 
+    def group_by_ig_username(self,data: pd.DataFrame) -> tuple[pd.DataFrame, InfluencerListType, InfluencerListType, InfluencerListType]: 
     # Group the data by 'person_id' 
-        grouped_data_specific, influencer_posts,influencer_posts_with_hashtag, influencer_posts_with_mentions = self.__specific_results(data)
-
-        grouped_data_specific = grouped_data_specific.drop('avg_gen', axis=1)
-        grouped_data_general = self.__general_results(data).drop('avg_gen', axis=1).drop_duplicates(subset='person_id')
-        grouped_data_specific['actual reach'] = grouped_data_specific['ig_num_followers'].sum()
-        grouped_data_general['influencers'] = grouped_data_general['ig_username']
-        print(grouped_data_general)
-        print("-------------------------")
-        merged_data = pd.merge(grouped_data_general, grouped_data_specific, on='person_id', how='inner')
-
-        df_with_specified_columns = merged_data[["influencers","engagement_general", "engagement_specific", "actual reach", "person_id"]]
-    
-    
-        return (df_with_specified_columns,influencer_posts,influencer_posts_with_hashtag, influencer_posts_with_mentions)
+        influencer_posts,influencer_posts_with_hashtag, influencer_posts_with_mentions = self.__specific_results(data)
+       
+        return (data,influencer_posts,influencer_posts_with_hashtag, influencer_posts_with_mentions)
 
 
 
@@ -159,33 +180,34 @@ class Scraper:
     def add_influencer_score_columns(_, data: pd.DataFrame, influencer_posts: InfluencerListType,influencer_posts_with_hashtag: InfluencerListType, influencer_posts_with_mentions: InfluencerListType ) -> pd.DataFrame: 
         for post in influencer_posts: 
             
-            for person_id in post: 
+            for ig_username in post: 
                 
-                if person_id in data['person_id'].values: 
+                if ig_username in data['ig_username'].values: 
                     
-                        data.loc[data['person_id'] == person_id, 'posts'] = post[person_id]
+                        data.loc[data['ig_username'] == ig_username, 'posts'] = post[ig_username]
                         data['posts'] = data['posts'].fillna(0)
 
         for post in influencer_posts_with_hashtag: 
             
-            for person_id in post: 
+            for ig_username in post: 
                 
-                if person_id in data['person_id'].values: 
+                if ig_username in data['ig_username'].values: 
                     
-                        data.loc[data['person_id'] == person_id, 'post hashtags'] = post[person_id]             
+                        data.loc[data['ig_username'] == ig_username, 'post hashtags'] = post[ig_username]             
                         data['post hashtags'] = data['post hashtags'].fillna(0)
             
         for post in influencer_posts_with_mentions: 
             
-            for person_id in post: 
+            for ig_username in post: 
                 
-                if person_id in data['person_id'].values: 
+                if ig_username in data['ig_username'].values: 
                     
-                        data.loc[data['person_id'] == person_id, 'post mentions'] = post[person_id]             
+                        data.loc[data['ig_username'] == ig_username, 'post mentions'] = post[ig_username]             
                         data['post mentions'] = data['post mentions'].fillna(0)
         
         data['score'] = data['posts'] + data['post hashtags'] + data['post mentions']
-        data = data.drop('person_id', axis=1)
+        data = data.drop_duplicates(subset='ig_username')
+        data.rename(columns={'ig_username': 'influencers'}, inplace=True)
 
         print("FINAL DATA")
         print(data)

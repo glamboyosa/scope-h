@@ -1,6 +1,8 @@
 version: "3"
 services:
   server:
+    env_file:
+      - ./server/.env
     build:
       context: ./server
     ports:
@@ -13,3 +15,5 @@ services:
       context: ./client
     ports:
       - "3000:3000"
+    volumes:
+      - ./client/src:/app/src

@@ -5,17 +5,17 @@ FROM node:18
 WORKDIR /app
 
 # Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
-COPY tailwind.config.js postcss.config.js ./
+COPY package*.json .
+COPY tailwind.config.js postcss.config.js .
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the application code
+# COPY public/ ./public/
 COPY . .
 
-# Expose the port that the React app will run on
-EXPOSE 3000
+
 
 # Start the React app with automatic reloading
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run" ,"dev"]
