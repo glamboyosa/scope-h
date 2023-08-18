@@ -87,7 +87,7 @@ class Scraper:
               if len(self.df_list) > 0: 
                    self.df = pd.DataFrame(self.df_list, columns=self.columns)
                    print(self.df)
-              print("SOMETHING GOT FUCKED", e)
+              print("SOMETHING WENT WRONG", e)
          print(self.df_list)
          return self.df
 
