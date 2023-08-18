@@ -1,5 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 type influencerResponse = {
   data: Array<{
     influencers: string;
@@ -187,7 +197,56 @@ const InfluencerPage = () => {
   console.log(Object.keys(r[0]));
   if (error) return <div>Something went wrong</div>;
   if (isLoading && !data) return <img className="mb-8" src="/loading.webp" />;
-  return <div>InfluencerPage</div>;
+  return (
+    <div>
+      <button
+        onClick={() => console.log("hey")}
+        className="p-4 rounded-md bg-pink-400 font-md hover:bg-pink-300"
+      >
+        Print 👩🏿‍🎤
+      </button>
+      <Table>
+        <TableCaption className="flex gap-4">
+          <div>Bubble room influencers (July 1-31 2023)</div>
+          <img src="/bubble(700x100).png" className="w-3/4" />
+        </TableCaption>
+        <TableHeader>
+          <TableRow>
+            {Object.keys(r[0]).map((colName) => (
+              <TableHead className="w-[100px] text-lg">{colName}</TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {r.map((row) => (
+            <TableRow>
+              <TableCell className="font-medium text-base">
+                {row.influencers}
+              </TableCell>
+              <TableCell className="font-medium text-base">
+                {row.caption_text}
+              </TableCell>
+              <TableCell className="font-medium text-base">
+                {row.taken_at}
+              </TableCell>
+              <TableCell className="font-medium text-base">
+                {row.posts}
+              </TableCell>
+              <TableCell className="font-medium text-base">
+                {row["post hashtags"]}
+              </TableCell>
+              <TableCell className="font-medium text-base">
+                {row["post mentions"]}
+              </TableCell>
+              <TableCell className="font-medium text-base">
+                {row.score}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 };
 
 export default InfluencerPage;
