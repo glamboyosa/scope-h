@@ -67,18 +67,17 @@ class Scraper:
                                 else:
                                     continue
                             else:
-                                
-                                data = {
+                                if "#bubbleroom" in post.lower() or "#bubbleroomstyle" in post.lower() or "@bubbleroom" in post.lower(): 
+                                     data = {
                                     'ig_username': influencer,
                                     'caption_text': post.caption,
                                     'taken_at': postdate
-                                }
-                                print(postdate)
+                                          }
+                                     print(postdate)
                                 
-                                self.df_list.append(data)
-                                #L.get_json()
-                                # if you want to tune k, uncomment below to get your k max
-                                #k_list.append(k)
+                                     self.df_list.append(data)
+                                
+                              
                                 k = 0
                 self.df = pd.DataFrame(self.df_list, columns=self.columns)
                 print(self.df)
