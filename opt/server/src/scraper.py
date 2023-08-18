@@ -1,7 +1,7 @@
 import os 
-from typing import List, Dict
+from typing import List, Dict, Hashable
 from datetime import datetime
-from itertools import dropwhile, takewhile
+
 
 import pandas as pd
 import instaloader
@@ -177,7 +177,7 @@ class Scraper:
 
 
     # add columns like posts, post mentions and score
-    def add_influencer_score_columns(_, data: pd.DataFrame, influencer_posts: InfluencerListType,influencer_posts_with_hashtag: InfluencerListType, influencer_posts_with_mentions: InfluencerListType ) -> pd.DataFrame: 
+    def add_influencer_score_columns(_, data: pd.DataFrame, influencer_posts: InfluencerListType,influencer_posts_with_hashtag: InfluencerListType, influencer_posts_with_mentions: InfluencerListType ) -> tuple[pd.DataFrame, list[dict[Hashable, any]]]: 
         for post in influencer_posts: 
             
             for ig_username in post: 
@@ -212,4 +212,4 @@ class Scraper:
         print("FINAL DATA")
         print(data)
         print("-------------------")
-        return data
+        return (data, data.to_dict(orient='records'))
