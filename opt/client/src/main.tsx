@@ -9,12 +9,12 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <InfluencerPage />,
+    element: <App />,
     errorElement: <ErrorBoundary />,
   },
   {
     path: "/influencers",
-    element: <App />,
+    element: <InfluencerPage />,
     errorElement: <ErrorBoundary />,
   },
 ]);

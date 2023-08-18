@@ -20,7 +20,6 @@ class Scraper:
         self.df = pd.DataFrame(columns=self.columns)
         self.df_list = []
        
-        self.session_id = os.environ.get("session_id")
         self.current_directory = os.getcwd()
         print("Current working directory:", self.current_directory)
         try:
@@ -46,11 +45,11 @@ class Scraper:
          try: 
               # loop through influencer and set the profile name
               # loop through their posts and do profile.get_followers(), .get_followees() and save the name 
-                for influencer in influencers[:50]: 
+                for influencer in influencers: 
                      
                     profile = instaloader.Profile.from_username(L.context,influencer)
                     if not profile.is_private:
-                        user_posts =  profile.get_posts()  
+                        user_posts =  profile.get_posts()   
                     
                         k = 0  # initiate k
 
@@ -67,7 +66,7 @@ class Scraper:
                                 else:
                                     continue
                             else:
-                                if "#bubbleroom" in post.lower() or "#bubbleroomstyle" in post.lower() or "@bubbleroom" in post.lower(): 
+                                if "#bubbleroom" in post.caption.lower() or "#bubbleroomstyle" in post.caption.lower() or "@bubbleroom" in post.caption.lower(): 
                                      data = {
                                     'ig_username': influencer,
                                     'caption_text': post.caption,
