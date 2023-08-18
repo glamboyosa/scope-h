@@ -148,6 +148,7 @@ def group_by_person_id(data: pd.DataFrame) -> tuple[pd.DataFrame, InfluencerList
     grouped_data_specific['actual reach'] = grouped_data_specific['ig_num_followers'].sum()
     grouped_data_general['influencers'] = grouped_data_general['ig_username']
     print(grouped_data_general)
+    
     print("-------------------------")
     merged_data = pd.merge(grouped_data_general, grouped_data_specific, on='person_id', how='inner')
 
